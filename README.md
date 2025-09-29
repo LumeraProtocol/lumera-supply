@@ -1,0 +1,99 @@
+# Lumera Supply API
+
+Stateless HTTP service to provide exchange-grade supply figures for LUME (total, circulating, max, and non-circulating breakdown), computed from on-chain data (Cosmos SDK LCD) and policy-driven lockups.
+
+Highlights
+- Endpoints using net/http only: `/total`, `/circulating`, `/max`, `/non_circulating`, `/healthz`
+- In-memory snapshot cache (TTL=60s) with background refresher and ETag
+- Policy-driven allowlist (module accounts, disclosed lockups)
+- IBC escrow included via `/ibc/apps/transfer/v1/denoms/{denom}/total_escrow`
+- Vesting math engine for Delayed, Continuous, Periodic, Clawback, PermanentLocked (ready for integration)
+- Rate limiting: 60 rpm (burst 120)
+
+## Build & Run
+
+Local build
+```
+go build -o bin/lumera-supply ./cmd/lumera-supply
+./bin/lumera-supply -addr=:8080 -lcd=http://localhost:1317 -policy=policy.json -denom=ulume
+```
+
+Docker
+```
+docker build -t lumera-supply:local .
+docker run --rm -p 8080:8080 -e LUMERA_LCD_URL=http://localhost:1317 lumera-supply:local
+```
+
+Configuration
+- LCD URL: `-lcd` flag or `LUMERA_LCD_URL`
+- Policy path: `-policy` flag or `LUMERA_POLICY_PATH` (see `policy.example.json`)
+- Default denom: `-denom` flag or `LUMERA_DEFAULT_DENOM` (default `ulume`)
+- HTTP listen: `-addr` flag or `LUMERA_HTTP_ADDR`
+
+## API
+
+All endpoints accept `?denom=ulume` (default from config). Responses include headers:
+- `ETag`
+- `X-Block-Height`
+- `X-Updated-At`
+
+- `GET /total?denom=ulume`
+```
+{
+  "denom": "ulume",
+  "height": 123,
+  "updated_at": "2025-09-28T22:30:00Z",
+  "etag": "...",
+  "total": "1000000"
+}
+```
+
+- `GET /circulating?denom=ulume`
+```
+{
+  "denom": "ulume",
+  "height": 123,
+  "updated_at": "2025-09-28T22:30:00Z",
+  "etag": "...",
+  "circulating": "985000",
+  "non_circulating": {
+    "sum": "15000",
+    "cohorts": [ { "name":"ibc_escrow", "amount":"10000" }, ... ]
+  }
+}
+```
+
+- `GET /non_circulating?denom=ulume`
+```
+{
+  "denom": "ulume",
+  "height": 123,
+  "updated_at": "2025-09-28T22:30:00Z",
+  "etag": "...",
+  "non_circulating": { "sum": "...", "cohorts": [ ... ] }
+}
+```
+
+- `GET /max?denom=ulume`
+```
+{
+  "denom": "ulume",
+  "height": 123,
+  "updated_at": "2025-09-28T22:30:00Z",
+  "etag": "...",
+  "max": null
+}
+```
+
+- `GET /healthz` → `{ "status": "ok", "time": "..." }`
+
+## Tests
+```
+go test ./...
+```
+- Vesting engine unit tests (golden-like checks for each type)
+- Supply invariant test uses httptest LCD to verify `total = circulating + non_circulating`
+
+## Notes
+- The current implementation treats user-created vesting accounts as circulating by default and only excludes cohorts provided by policy.
+- Integration with chain vesting account types can be added in the cohort calculators using the provided vesting math engine.
