@@ -15,14 +15,18 @@ Highlights
 Local build
 ```
 go build -o bin/lumera-supply ./cmd/lumera-supply
-./bin/lumera-supply -addr=:8080 -lcd=http://localhost:1317 -policy=policy.json -denom=ulume
+./bin/lumera-supply -addr=:8080 -lcd=https://lcd.lumera.io -policy=policy.json -denom=ulume
 ```
 
-Docker
+Docker:
 ```
 docker build -t lumera-supply:local .
-docker run --rm -p 8080:8080 -e LUMERA_LCD_URL=http://localhost:1317 lumera-supply:local
+docker run --rm -p 8080:8080 -e LUMERA_LCD_URL=https://lcd.lumera.io lumera-supply:local
 ```
+
+Note: Do not use http://localhost:1317 for LUMERA_LCD_URL inside the container — "localhost" refers to the container itself. On Linux, if host.docker.internal is not available, use one of:
+- Add host mapping: --add-host=host.docker.internal:host-gateway
+- Or run with host networking (exposes all ports): --network=host
 
 Configuration
 - LCD URL: `-lcd` flag or `LUMERA_LCD_URL`
@@ -102,14 +106,14 @@ go test ./...
 
 Build the one-shot CLI that reproduces the API snapshot locally and prints a full JSON payload with totals and the non-circulating breakdown:
 
-```
+```bash
 go build -o bin/lumera-supply-cli ./cmd/lumera-supply-cli
 ```
 
 Run it (uses the same LCD and policy as the server):
 
-```
-./bin/lumera-supply-cli -lcd=http://localhost:1317 -policy=policy.json -denom=ulume
+```bash
+./bin/lumera-supply-cli -lcd=https://lcd.lumera.io -policy=policy.json -denom=ulume
 ```
 
 Environment variable equivalents:
