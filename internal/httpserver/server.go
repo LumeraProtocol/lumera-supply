@@ -100,18 +100,30 @@ type nonCirc struct {
 	Cohorts []cohortEntry `json:"cohorts"`
 }
 
+type addressItem struct {
+	Address string `json:"address"`
+	Amount  string `json:"amount"`
+	EndDate string `json:"end_date,omitempty"`
+}
+
 type cohortEntry struct {
-	Name      string   `json:"name"`
-	Reason    string   `json:"reason"`
-	Addresses []string `json:"addresses,omitempty"`
-	Amount    string   `json:"amount"`
+	Name    string        `json:"name"`
+	Reason  string        `json:"reason"`
+	Address string        `json:"address,omitempty"`
+	Items   []addressItem `json:"items,omitempty"`
+	Amount  string        `json:"amount"`
 }
 
 // projection helper
 func toTypesSnapshot(s *types.SupplySnapshot) *typesSnapshot {
 	coh := make([]cohortEntry, 0, len(s.NonCirculating.Cohorts))
 	for _, c := range s.NonCirculating.Cohorts {
-		coh = append(coh, cohortEntry{c.Name, c.Reason, c.Addresses, c.Amount})
+		// map items
+		items := make([]addressItem, 0, len(c.Items))
+		for _, it := range c.Items {
+			items = append(items, addressItem{Address: it.Address, Amount: it.Amount, EndDate: it.EndDate})
+		}
+		coh = append(coh, cohortEntry{Name: c.Name, Reason: c.Reason, Address: c.Address, Items: items, Amount: c.Amount})
 	}
 	return &typesSnapshot{
 		Denom:       s.Denom,

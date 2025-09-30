@@ -28,7 +28,7 @@ func (e *Engine) ContinuousLocked(total string, now, start, end time.Time) strin
 		return total
 	}
 	// ratio locked = 1 - progress
-	locked := mulRatio(total, end.Sub(now), end.Sub(start))
+	locked := mulRatio(total, now.Sub(start), end.Sub(start))
 	return locked
 }
 

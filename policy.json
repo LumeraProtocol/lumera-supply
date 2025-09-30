@@ -1,0 +1,230 @@
+{
+  "max_supply": null,
+  "module_accounts": [
+    "claim"
+  ],
+  "disclosed_lockups": {
+    "foundation_genesis": [
+      {
+        "name": "seed_sale_1",
+        "amount": "5000000000000ulume",
+        "reason": "6-month vesting, disclosed",
+        "address": "lumera134tmfqteaytw30tpetkq65dnyx595wqqd0uf45",
+        "custody": "multisig"
+      },
+      {
+        "name": "seed_sale_2",
+        "amount": "5000000000000ulume",
+        "reason": "12-month vesting, disclosed",
+        "address": "lumera1dcega9jpj3xulwax6npj7lylev8m6e67k78ujp",
+        "custody": "multisig"
+      },
+      {
+        "name": "seed_sale_3",
+        "amount": "5000000000000ulume",
+        "reason": "18-month vesting, disclosed",
+        "address": "lumera16l066jwzyluvwty4sqd0h9gvjgd7lwdtqahlvf",
+        "custody": "multisig"
+      },
+      {
+        "name": "seed_sale_4",
+        "amount": "5000000000000ulume",
+        "reason": "24-month vesting, disclosed",
+        "address": "lumera1z0s69r8x52mhvree9h0jyufhfpjeejpsgs6chw",
+        "custody": "multisig"
+      },
+      {
+        "name": "seed_sale_5",
+        "amount": "5000000000000ulume",
+        "reason": "30-month vesting, disclosed",
+        "address": "lumera1hvxllrukdd3u6qrtery6fhaevxl48zxws90pvc",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_1",
+        "amount": "6250000000000ulume",
+        "reason": "6-month vesting, disclosed",
+        "address": "lumera13rr3ar5ya9szg8plfszzfmedkjapx276ncys2k",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_2",
+        "amount": "6250000000000ulume",
+        "reason": "10-month vesting, disclosed",
+        "address": "lumera1p5c50gr28xvtfhsv9042axvyyhqacd87s82gza",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_3",
+        "amount": "6250000000000ulume",
+        "reason": "14-month vesting, disclosed",
+        "address": "lumera164svq83madhk86hud3q0j4zz5up9qm2fesm3vu",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_4",
+        "amount": "6250000000000ulume",
+        "reason": "18-month vesting, disclosed",
+        "address": "lumera102r0yggre75207rd6pg20qsyq50rjg5hr0alpj",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_5",
+        "amount": "6250000000000ulume",
+        "reason": "22-month vesting, disclosed",
+        "address": "lumera15p4edvun6ytmudktl26wz2ezjw4hue5nut2nx9",
+        "custody": "multisig"
+      },
+      {
+        "name": "private_sale_6",
+        "amount": "6250000000000ulume",
+        "reason": "26-month vesting, disclosed",
+        "address": "lumera1wvdzru056y0cfvr4sdl0l5h7dye8mknk3jsvy4",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_1",
+        "amount": "8333333340000ulume",
+        "reason": "7-month vesting, disclosed",
+        "address": "lumera1a9hdrg850d0z5ytdsmyqrcnz797jlc0sgjvujm",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_2",
+        "amount": "8333333340000ulume",
+        "reason": "13-month vesting, disclosed",
+        "address": "lumera157qcru27tupyy22af9eyx3r0c6s45dwe7888t3",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_3",
+        "amount": "8333333330000ulume",
+        "reason": "19-month vesting, disclosed",
+        "address": "lumera15t9fwawcthmvcd6pngj389eey9sklrngkav332",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_4",
+        "amount": "8333333330000ulume",
+        "reason": "25-month vesting, disclosed",
+        "address": "lumera15y0u3qendz56u6wdy8lh86fr7ym9urdaqkra8q",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_5",
+        "amount": "8333333330000ulume",
+        "reason": "31-month vesting, disclosed",
+        "address": "lumera1cmy2qdlvs6ssp0e86phmhh8uuhxc7jps27c7r6",
+        "custody": "multisig"
+      },
+      {
+        "name": "team_6",
+        "amount": "8333333330000ulume",
+        "reason": "37-month vesting, disclosed",
+        "address": "lumera1vq9gf7rsegwfxrhe88xl3t5lk2v6z0qarg3vfg",
+        "custody": "multisig"
+      },
+      {
+        "name": "advisors_1",
+        "amount": "1250000000000ulume",
+        "reason": "15-month vesting, disclosed",
+        "address": "lumera1hldqk5m7kk7pyznfqknynuljje6klk50puy7k8",
+        "custody": "multisig"
+      },
+      {
+        "name": "advisors_2",
+        "amount": "1250000000000ulume",
+        "reason": "18-month vesting, disclosed",
+        "address": "lumera1h945dtz4thdun3c5mqkc0emxfhxytmrk3mwqmc",
+        "custody": "multisig"
+      },
+      {
+        "name": "advisors_3",
+        "amount": "1250000000000ulume",
+        "reason": "21-month vesting, disclosed",
+        "address": "lumera1meu0ujkcgw0vphwxqvvev45lkmsexmpe4a0jt6",
+        "custody": "multisig"
+      },
+      {
+        "name": "advisors_4",
+        "amount": "1250000000000ulume",
+        "reason": "24-month vesting, disclosed",
+        "address": "lumera1h0fxf9puy8hzx6mrej68zckn9p5t6ufx3uejva",
+        "custody": "multisig"
+      },
+      {
+        "name": "advisors_5",
+        "amount": "1250000000000ulume",
+        "reason": "27-month vesting, disclosed",
+        "address": "lumera14hwtkjaj5gpykzl4n6efhg3fhvy4a7kyp9z42x",
+        "custody": "multisig"
+      },
+      {
+        "name": "ecosystem_development_1",
+        "amount": "20000000000000ulume",
+        "reason": "No vesting, immediate unlock",
+        "address": "lumera1jtqg8cg4mncksjm2f2lv4wud4nsuwjdr4nk922",
+        "custody": "direct"
+      },
+      {
+        "name": "ecosystem_development_2",
+        "amount": "11250000000000ulume",
+        "reason": "No vesting, immediate unlock",
+        "address": "lumera17chyyl3c5uqlfkvfhqpwftenu37qapwqn6ukfv",
+        "custody": "direct"
+      },
+      {
+        "name": "ecosystem_development_3",
+        "amount": "11250000000000ulume",
+        "reason": "1-month vesting, disclosed",
+        "address": "lumera1g4n89fh08qjrdce8rvyvqfcy4xvff5nvzavhas",
+        "custody": "multisig"
+      },
+      {
+        "name": "ecosystem_development_4",
+        "amount": "11250000000000ulume",
+        "reason": "3-month vesting, disclosed",
+        "address": "lumera17xfa98jmzln8mkjgnd0ckkec5ce5qymnyrauwr",
+        "custody": "multisig"
+      },
+      {
+        "name": "ecosystem_development_5",
+        "amount": "11250000000000ulume",
+        "reason": "6-month vesting, disclosed",
+        "address": "lumera10tk76f4mjna83zfc5hqvxv34kdfdl22y4r0rj9",
+        "custody": "multisig"
+      },
+      {
+        "name": "ecosystem_development_6",
+        "amount": "11250000000000ulume",
+        "reason": "9-month vesting, disclosed",
+        "address": "lumera1ydtte8xv64z63rd5arpklycwlhtcgn0kaf6nlr",
+        "custody": "multisig"
+      },
+      {
+        "name": "ecosystem_development_7",
+        "amount": "11250000000000ulume",
+        "reason": "12-month vesting, disclosed",
+        "address": "lumera1rkyfdfkkyun4z24jwfampn9dmdtvt7zgut63gq",
+        "custody": "multisig"
+      },
+      {
+        "name": "community_growth_1",
+        "amount": "12500000000000ulume",
+        "reason": "No vesting, immediate unlock",
+        "address": "lumera16p4fdxh29jvyjdj67kyy050dqsah6pyjprdug8",
+        "custody": "direct"
+      },
+      {
+        "name": "community_growth_2",
+        "amount": "12500000000000ulume",
+        "reason": "12-month vesting starting month 1, disclosed",
+        "address": "lumera1qm2nglf2t2zn26hrf7tk0rte3fc97z4ynk4s5r",
+        "custody": "multisig"
+      }
+    ],
+    "supernode_bootstraps": [],
+    "timelocks": [],
+    "partners_lockups": []
+  }
+}

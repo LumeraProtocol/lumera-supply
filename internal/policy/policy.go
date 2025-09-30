@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 )
 
 // Policy defines cohorts, module accounts, and IBC channels to consider non-circulating.
@@ -15,14 +16,40 @@ type Policy struct {
 	// MaxSupply, if provided, is the protocol maximum supply for the denom.
 	MaxSupply *string `json:"max_supply"`
 
-	// ModuleAccounts are module account addresses or names to treat as non-circulating.
+	// ModuleAccounts are module account names (preferred) or addresses to treat as non-circulating.
+	// If an entry looks like a bech32 address (e.g., starts with "lumera1"), it will be treated as an address
+	// for backward compatibility with older policies and tests.
 	ModuleAccounts []string `json:"module_accounts"`
 
-	// IBC channels to include when computing escrow totals.
-	IBCChannels []string `json:"ibc_channels"`
+	// New nested disclosed lockups structure.
+	Disclosed DisclosedLockups `json:"disclosed_lockups"`
 
-	// DisclosedLockups are foundation or team addresses with known lockups.
-	DisclosedLockups []Cohort `json:"disclosed_lockups"`
+	// Backward-compatibility: older flat cohorts used in tests (not populated from JSON).
+	DisclosedLockups []Cohort `json:"-"`
+}
+
+type DisclosedLockups struct {
+	FoundationGenesis   []FoundationEntry `json:"foundation_genesis"`
+	SupernodeBootstraps []SupernodeEntry  `json:"supernode_bootstraps"`
+	Timelocks           []json.RawMessage `json:"timelocks"`
+	PartnersLockups     []json.RawMessage `json:"partners_lockups"`
+}
+
+type FoundationEntry struct {
+	Name    string `json:"name"`
+	Amount  string `json:"amount,omitempty"`
+	Reason  string `json:"reason,omitempty"`
+	Address string `json:"address"`
+	Custody string `json:"custody,omitempty"`
+}
+
+type SupernodeEntry struct {
+	Name            string     `json:"name"`
+	Address         string     `json:"address"`
+	Permanent       bool       `json:"permanent,omitempty"`
+	DurationMonths  *int       `json:"duration_months,omitempty"`
+	StartTime       *time.Time `json:"start_time,omitempty"`
+	EndTime         *time.Time `json:"end_time,omitempty"`
 }
 
 type Cohort struct {
@@ -55,10 +82,24 @@ func (p *Policy) Validate() error {
 	if p == nil {
 		return errors.New("nil policy")
 	}
-	// Optional fields are fine; ensure names present in disclosed lockups
+	// Validate nested disclosed lockups when present
+	for i, e := range p.Disclosed.FoundationGenesis {
+		if e.Name == "" {
+			return fmt.Errorf("disclosed_lockups.foundation_genesis[%d] missing name", i)
+		}
+		if e.Address == "" {
+			return fmt.Errorf("disclosed_lockups.foundation_genesis[%d] missing address", i)
+		}
+	}
+	for i, e := range p.Disclosed.SupernodeBootstraps {
+		if e.Address == "" {
+			return fmt.Errorf("disclosed_lockups.supernode_bootstraps[%d] missing address", i)
+		}
+	}
+	// Back-compat: ensure names present in flat disclosed lockups if used programmatically
 	for i, c := range p.DisclosedLockups {
 		if c.Name == "" {
-			return fmt.Errorf("disclosed_lockups[%d] missing name", i)
+			return fmt.Errorf("disclosed_lockups(flat)[%d] missing name", i)
 		}
 	}
 	return nil

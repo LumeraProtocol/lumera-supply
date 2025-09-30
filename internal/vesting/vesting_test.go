@@ -92,3 +92,29 @@ func TestPermanentLocked(t *testing.T) {
 		t.Fatalf("expected 123456 got %s", got)
 	}
 }
+
+func TestContinuousLocked_Asymmetric(t *testing.T) {
+	e := NewEngine()
+	start := mustTime("2024-01-01T00:00:00Z")
+	end := mustTime("2024-01-11T00:00:00Z") // 10 days, total=1000
+
+	// 20% elapsed → locked = 80% of total
+	now := start.Add(2 * 24 * time.Hour)
+	if got := e.ContinuousLocked("1000", now, start, end); got != "800" {
+		t.Fatalf("20%% elapsed: locked want 800 got %s", got)
+	}
+
+	// 80% elapsed → locked = 20% of total
+	now = start.Add(8 * 24 * time.Hour)
+	if got := e.ContinuousLocked("1000", now, start, end); got != "200" {
+		t.Fatalf("80%% elapsed: locked want 200 got %s", got)
+	}
+
+	// Boundaries
+	if got := e.ContinuousLocked("1000", start, start, end); got != "1000" {
+		t.Fatalf("at start: want 1000 got %s", got)
+	}
+	if got := e.ContinuousLocked("1000", end, start, end); got != "0" {
+		t.Fatalf("at end: want 0 got %s", got)
+	}
+}
