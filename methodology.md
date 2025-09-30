@@ -9,6 +9,9 @@ This document defines how Lumera computes and publishes Total Supply, Circulatin
 * **Total Supply (LUME):** On-chain total as reported by `x/bank` at block *H*.
 * **Circulating Supply (LUME):** Total Supply minus balances that are not freely transferable at block *H*.
 * **Max Supply:** Not applicable - no hard cap exists, `null`.
+* **Staking treatment.** Staked but *unlocked* LUME **counts as circulating**. Only the *locked* portion of vesting/lockup accounts is excluded from circulating supply.
+* **Default denom.** Unless otherwise specified via the `?denom` query parameter, all endpoints default to `ulume`.
+
 
 ## High-level formula
 
