@@ -14,6 +14,11 @@ import (
 	"github.com/lumera-labs/lumera-supply/pkg/supply"
 )
 
+var (
+	GitTag    = "dev"
+	GitCommit = "unknown"
+)
+
 func main() {
 	var (
 		addr       = flag.String("addr", getEnv("LUMERA_HTTP_ADDR", ":8080"), "HTTP listen address")
@@ -43,6 +48,8 @@ func main() {
 		DefaultDenom: *defaultDen,
 		RatePerMin:   60,
 		Burst:        120,
+		GitTag:       GitTag,
+		GitCommit:    GitCommit,
 	})
 
 	log.Printf("Lumera Supply API listening on %s (lcd=%s denom=%s)", *addr, *lcdURL, *defaultDen)

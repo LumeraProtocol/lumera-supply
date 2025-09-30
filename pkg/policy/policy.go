@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +15,8 @@ import (
 // Only cohorts present in this policy are treated as non-circulating; user-created
 // vesting accounts are considered circulating by default.
 type Policy struct {
+	// Version of the policy file for auditability.
+	Version string `json:"version,omitempty"`
 	// MaxSupply, if provided, is the protocol maximum supply for the denom.
 	MaxSupply *string `json:"max_supply"`
 
@@ -26,6 +30,9 @@ type Policy struct {
 
 	// Backward-compatibility: older flat cohorts used in tests (not populated from JSON).
 	DisclosedLockups []Cohort `json:"-"`
+
+	// ETag is a short hash representing the policy content/version.
+	ETag string `json:"-"`
 }
 
 type DisclosedLockups struct {
@@ -74,6 +81,14 @@ func Load(path string) (*Policy, error) {
 	}
 	if err := p.Validate(); err != nil {
 		return nil, err
+	}
+	// compute a short ETag from file content and version (first 8 hex of sha1)
+	h := sha1.Sum(b)
+	short := hex.EncodeToString(h[:4])
+	if p.Version != "" {
+		p.ETag = "policy-" + p.Version + "-" + short
+	} else {
+		p.ETag = "policy-" + short
 	}
 	return &p, nil
 }

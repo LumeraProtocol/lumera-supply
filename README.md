@@ -46,10 +46,15 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
+  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
-  "total": "1000000"
+  "policy-etag": "...",
+  "total": "1000000",
+  "circulating": "...",
+  "non_circulating": "...",
+  "max": null
 }
 ```
 
@@ -57,14 +62,13 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
+  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
+  "policy-etag": "...",
   "circulating": "985000",
-  "non_circulating": {
-    "sum": "15000",
-    "cohorts": [ { "name":"ibc_escrow", "amount":"10000" }, ... ]
-  }
+  "non_circulating": "15000"
 }
 ```
 
@@ -72,9 +76,11 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
+  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
+  "policy-etag": "...",
   "non_circulating": { "sum": "...", "cohorts": [ ... ] }
 }
 ```

@@ -18,6 +18,8 @@ type Config struct {
 	DefaultDenom string
 	RatePerMin   int
 	Burst        int
+	GitTag       string
+	GitCommit    string
 }
 
 type Server struct {
@@ -31,6 +33,8 @@ func New(cfg Config) *Server {
 	s := &Server{cfg: cfg, mux: http.NewServeMux(), limiter: lim}
 	// public endpoints
 	s.mux.HandleFunc("/healthz", s.healthz)
+	s.mux.HandleFunc("/status", s.wrap(s.handleStatus))
+	s.mux.HandleFunc("/version", s.wrap(s.handleVersion))
 	s.mux.HandleFunc("/total", s.wrap(s.handleTotal))
 	s.mux.HandleFunc("/circulating", s.wrap(s.handleCirculating))
 	s.mux.HandleFunc("/non_circulating", s.wrap(s.handleNonCirc))
@@ -89,6 +93,7 @@ type typesSnapshot struct {
 	Height      int64     `json:"height"`
 	UpdatedAt   time.Time `json:"updated_at"`
 	ETag        string    `json:"etag"`
+	PolicyETag  string    `json:"policy-etag"`
 	Total       string    `json:"total"`
 	Circulating string    `json:"circulating"`
 	Max         *string   `json:"max"`
@@ -97,7 +102,7 @@ type typesSnapshot struct {
 
 type nonCirc struct {
 	Sum     string        `json:"sum"`
-	Cohorts []cohortEntry `json:"cohorts"`
+	Cohorts []cohortEntry `json:"cohorts,omitempty"`
 }
 
 type addressItem struct {
@@ -130,6 +135,7 @@ func toTypesSnapshot(s *types.SupplySnapshot) *typesSnapshot {
 		Height:      s.Height,
 		UpdatedAt:   s.UpdatedAt,
 		ETag:        s.ETag,
+		PolicyETag:  s.PolicyETag,
 		Total:       s.Total,
 		Circulating: s.Circulating,
 		Max:         s.Max,
@@ -172,11 +178,12 @@ func (s *Server) handleTotal(w http.ResponseWriter, r *http.Request) {
 		Height         int64     `json:"height"`
 		UpdatedAt      time.Time `json:"updated_at"`
 		ETag           string    `json:"etag"`
+		PolicyETag     string    `json:"policy-etag"`
 		Total          string    `json:"total"`
 		Circulating    string    `json:"circulating"`
 		NonCirculating string    `json:"non_circulating"`
 		Max            *string   `json:"max"`
-	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.Total, srv.Circulating, srv.NonCirc.Sum, srv.Max}
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.PolicyETag, srv.Total, srv.Circulating, srv.NonCirc.Sum, srv.Max}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))
@@ -208,13 +215,14 @@ func (s *Server) handleMax(w http.ResponseWriter, r *http.Request) {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(struct {
-		Denom     string    `json:"denom"`
-		Decimals  int       `json:"decimals"`
-		Height    int64     `json:"height"`
-		UpdatedAt time.Time `json:"updated_at"`
-		ETag      string    `json:"etag"`
-		Max       *string   `json:"max"`
-	}{snap.Denom, 6, snap.Height, snap.UpdatedAt, snap.ETag, snap.Max})
+		Denom      string    `json:"denom"`
+		Decimals   int       `json:"decimals"`
+		Height     int64     `json:"height"`
+		UpdatedAt  time.Time `json:"updated_at"`
+		ETag       string    `json:"etag"`
+		PolicyETag string    `json:"policy-etag"`
+		Max        *string   `json:"max"`
+	}{snap.Denom, 6, snap.Height, snap.UpdatedAt, snap.ETag, snap.PolicyETag, snap.Max})
 }
 
 func (s *Server) handleCirculating(w http.ResponseWriter, r *http.Request) {
@@ -241,9 +249,10 @@ func (s *Server) handleCirculating(w http.ResponseWriter, r *http.Request) {
 		Height         int64     `json:"height"`
 		UpdatedAt      time.Time `json:"updated_at"`
 		ETag           string    `json:"etag"`
+		PolicyETag     string    `json:"policy-etag"`
 		Circulating    string    `json:"circulating"`
 		NonCirculating string    `json:"non_circulating"`
-	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.Circulating, srv.NonCirc.Sum}
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.PolicyETag, srv.Circulating, srv.NonCirc.Sum}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))
@@ -270,14 +279,21 @@ func (s *Server) handleNonCirc(w http.ResponseWriter, r *http.Request) {
 	}
 	snap := resp.snap
 	srv := toTypesSnapshot(snap)
+	// verbose handling (default 0): when 0, omit cohorts
+	v := r.URL.Query().Get("verbose")
+	breakdown := srv.NonCirc
+	if v == "" || v == "0" || v == "false" || v == "False" {
+		breakdown.Cohorts = nil
+	}
 	out := struct {
-		Denom     string    `json:"denom"`
-		Decimals  int       `json:"decimals"`
-		Height    int64     `json:"height"`
-		UpdatedAt time.Time `json:"updated_at"`
-		ETag      string    `json:"etag"`
-		Breakdown nonCirc   `json:"non_circulating"`
-	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.NonCirc}
+		Denom      string    `json:"denom"`
+		Decimals   int       `json:"decimals"`
+		Height     int64     `json:"height"`
+		UpdatedAt  time.Time `json:"updated_at"`
+		ETag       string    `json:"etag"`
+		PolicyETag string    `json:"policy-etag"`
+		Breakdown  nonCirc   `json:"non_circulating"`
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.PolicyETag, breakdown}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))
@@ -293,6 +309,55 @@ func (s *Server) healthz(w http.ResponseWriter, r *http.Request) {
 		Status string `json:"status"`
 		Time   string `json:"time"`
 	}{"ok", time.Now().UTC().Format(time.RFC3339)})
+}
+
+// status: { status, height, updated_at, policy_etag, etag }
+func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
+	denom, ok := s.parseDenom(r)
+	if !ok {
+		http.Error(w, "invalid denom", http.StatusBadRequest)
+		return
+	}
+	resp, status, err := s.snapshot(r, denom)
+	if err != nil {
+		log.Printf("/status error: %v", err)
+		http.Error(w, "upstream error", http.StatusBadGateway)
+		return
+	}
+	if status == http.StatusNotModified {
+		w.WriteHeader(status)
+		return
+	}
+	snap := resp.snap
+	w.Header().Set("ETag", snap.ETag)
+	w.Header().Set("X-Block-Height", itoa64(snap.Height))
+	w.Header().Set("X-Updated-At", snap.UpdatedAt.Format(time.RFC3339))
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(struct {
+		Status     string    `json:"status"`
+		Height     int64     `json:"height"`
+		UpdatedAt  time.Time `json:"updated_at"`
+		ETag       string    `json:"etag"`
+		PolicyETag string    `json:"policy-etag"`
+	}{"ok", snap.Height, snap.UpdatedAt, snap.ETag, snap.PolicyETag})
+}
+
+// version: { github-hash, git-tag, policy_etag }
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	// We don't need a fresh snapshot; policy ETag can be taken from last cached if present
+	snap, _ := s.cfg.Cache.Get()
+	policyETag := ""
+	if snap != nil {
+		policyETag = snap.PolicyETag
+	}
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(struct {
+		GitHash    string `json:"github-hash"`
+		GitTag     string `json:"git-tag"`
+		PolicyETag string `json:"policy_etag"`
+	}{s.cfg.GitCommit, s.cfg.GitTag, policyETag})
 }
 
 func itoa64(n int64) string {

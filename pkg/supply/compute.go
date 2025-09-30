@@ -213,11 +213,12 @@ func (c *Computer) ComputeSnapshot(denom string) (*types.SupplySnapshot, error) 
 		maxSupply = c.policy.MaxSupply
 	}
 
-	return &types.SupplySnapshot{
+ return &types.SupplySnapshot{
 		Denom:          denom,
 		Height:         height,
 		UpdatedAt:      t.UTC(),
 		ETag:           etag,
+		PolicyETag:     func() string { if c.policy != nil { return c.policy.ETag }; return "" }(),
 		Total:          total,
 		Circulating:    circ.String(),
 		Max:            maxSupply,

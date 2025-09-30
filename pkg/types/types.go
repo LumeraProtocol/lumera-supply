@@ -9,6 +9,7 @@ type SupplySnapshot struct {
 	Height         int64            `json:"height"`
 	UpdatedAt      time.Time        `json:"updated_at"`
 	ETag           string           `json:"etag"`
+	PolicyETag     string           `json:"policy-etag"`
 	Total          string           `json:"total"`
 	Circulating    string           `json:"circulating"`
 	Max            *string          `json:"max"`

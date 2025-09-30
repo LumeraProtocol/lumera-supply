@@ -14,6 +14,11 @@ import (
 	"github.com/lumera-labs/lumera-supply/pkg/types"
 )
 
+var (
+	GitTag    = "dev"
+	GitCommit = "unknown"
+)
+
 func main() {
 	var (
 		lcdURL     = flag.String("lcd", getEnv("LUMERA_LCD_URL", "http://localhost:1317"), "Cosmos LCD base URL")
@@ -74,12 +79,13 @@ func projectCLI(s *types.SupplySnapshot) any {
 		}
 		coh = append(coh, cohortEntry{Name: c.Name, Reason: c.Reason, Address: c.Address, Items: items, Amount: c.Amount})
 	}
-	return struct {
+ return struct {
 		Denom          string    `json:"denom"`
 		Decimals       int       `json:"decimals"`
 		Height         int64     `json:"height"`
 		UpdatedAt      time.Time `json:"updated_at"`
 		ETag           string    `json:"etag"`
+		PolicyETag     string    `json:"policy-etag"`
 		Total          string    `json:"total"`
 		Circulating    string    `json:"circulating"`
 		NonCirculating nonCirc   `json:"non_circulating"`
@@ -90,6 +96,7 @@ func projectCLI(s *types.SupplySnapshot) any {
 		Height:         s.Height,
 		UpdatedAt:      s.UpdatedAt,
 		ETag:           s.ETag,
+		PolicyETag:     s.PolicyETag,
 		Total:          s.Total,
 		Circulating:    s.Circulating,
 		NonCirculating: nonCirc{Sum: s.NonCirculating.Sum, Cohorts: coh},
