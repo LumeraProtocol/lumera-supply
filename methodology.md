@@ -44,11 +44,13 @@ Notes:
 
 * Any balance in a normal account without transfer restrictions.
 * Staked balances from unlocked accounts.
-* **User-created** vesting accounts via `MsgCreateVestingAccount` (permissionless “self-lock”) are **treated as circulating** by default (to avoid manipulation).
+* **User-created vesting accounts** (e.g., `MsgCreateVestingAccount`) are treated as **circulating by default**. Rationale: anyone could self-lock to distort supply. **Exception:** if such accounts are explicitly listed in `policy/policy.json` under a vesting/lockup cohort, the **locked** portion is excluded.
 
 ## Community Pool
 
 Always non-circulating while held by the distribution module. When governance spends from the pool to a standard account, that amount becomes circulating at the spend block.
+
+Community pool amounts are published as DecCoins. We **truncate** (floor) to the integer base-denom amount of `ulume` at height H when computing non-circulating.
 
 ## Foundation Genesis Cohorts (provenance)
 
@@ -74,7 +76,7 @@ The following genesis cohorts exist:
 
 ## Exact vesting math (per account, denom = LUME)
 
-At chain time/height **H**:
+We compute the **locked** portion at height/time H via the chain’s spendable logic:
 
 Definitions
 - **ov** = `original_vesting` (for ***LUME***) from `BaseVestingAccount`
@@ -117,16 +119,20 @@ Per-type **V_rem(H)**
 
 Base URL: `https://api.lumera.org/supply`
 
-All responses include:
-```
+All responses include a single, consistent `height` (int64), `updated_at` (RFC3339), and `etag` (policy+inputs identifier). Values are base-denom integers.
+
+Example:
+```json
 {
   "denom": "ulume",
   "decimals": 6,
   "amount": "1234567890123",
   "height": 1234567,
-  "updated_at": "2025-09-25T21:00:00Z"
+  "updated_at": "2025-09-29T22:11:33Z",
+  "etag": "W/\"policy-v1.3-5c1a\""
 }
 ```
+
 ### Endpoints
 
 1. `GET /total?denom=ulume`
