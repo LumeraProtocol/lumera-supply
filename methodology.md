@@ -2,7 +2,9 @@
 
 ## Scope
 
-This document defines how Lumera computes and publishes Total Supply, Circulating Supply, and Max Supply for the LUME asset, and specifies the HTTPS endpoints exchanges and data providers should query.
+This document defines how Lumera calculates and publishes **Total Supply**, **Circulating Supply**, and **Max Supply** on the LUME token on the Lumera Protocol. It further specifies the HTTPS endpoints that exchanges, indexers, and market data providers should query 
+
+## Description
 
 The goal is to provide a transparent, auditable, and reproducible methodology that aligns with industry standards and market data providers.  
 
@@ -230,3 +232,13 @@ Example:
 
 1. Machine-readable **allowlist** repository - URL
 2. Historical JSON snapshots `{height,total,non_circulating_breakdown,circulating}` for audit - URL
+
+## Reviewer Notes
+
+- **We do not exclude all vesting accounts by default.** Only official team/treasury/eco lockups listed in `policy/policy.json` are excluded, and only their locked portion. User-created vesting accounts remain circulating unless explicitly listed.  
+- **Staked tokens are included.** Bonded tokens remain the property of the holder and can be unbonded, so they count toward circulating supply.  
+- **IBC escrow balances are excluded.** Tokens in escrow are in transit and not currently spendable.  
+- **All exclusions are transparent.** `policy/policy.json` is public and versioned; each API response includes `policy_etag` for reproducibility.  
+- **Auditable at any block height.** Given (`height`, `policy_etag`), third parties can reproduce the figure using LCD/gRPC queries.
+
+This methodology aligns with market standards for circulating supply and ensures both transparency and auditability.
