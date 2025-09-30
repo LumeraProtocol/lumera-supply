@@ -1,6 +1,6 @@
 # Lumera Supply Service
 
-A minimal HTTP service to expose **total**, **non-circulating**, **circulating**, and **max** supply figures for the Lumera blockchain, computed from on-chain data (Cosmos SDK LCD) and policy-driven lockups.Intended for use by exchanges, indexers, and market data providers.
+A minimal HTTP service to expose **total**, **non-circulating**, **circulating**, and **max** supply figures for the Lumera blockchain, computed from on-chain data (Cosmos SDK LCD) and policy-driven lockups. Intended for use by exchanges, indexers, and market data providers.
 
 ## Features
 
