@@ -4,6 +4,15 @@
 
 This document defines how Lumera computes and publishes Total Supply, Circulating Supply, and Max Supply for the LUME asset, and specifies the HTTPS endpoints exchanges and data providers should query.
 
+The goal is to provide a transparent, auditable, and reproducible methodology that aligns with industry standards and market data providers.  
+
+At a high level, circulating supply is derived from **total on-chain supply** at a given block height, minus specific non-circulating categories:  
+- module accounts and the governance-controlled community pool,  
+- IBC escrow balances and other disclosed escrow contracts, and  
+- the locked portions of official vesting/lockup allocations (team, treasury, ecosystem).  
+
+Everything else — including user balances, unlocked allocations, and staked tokens — is considered circulating.
+
 ## Definitions
 
 * **Total Supply (LUME):** On-chain total as reported by `x/bank` at block *H*.
