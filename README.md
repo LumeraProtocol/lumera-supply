@@ -15,13 +15,21 @@ A minimal HTTP service to expose **total**, **non-circulating**, **circulating**
 
 ### Build locally
 ```
-go build -o bin/lumera-supply ./cmd/lumera-supply
+go build -ldflags "-s -w \
+    -X 'main.GitTag=$(git describe --tags --always --dirty)' \
+    -X 'main.GitCommit=$(git rev-parse --short HEAD)'" \
+  -o bin/lumera-supply ./cmd/lumera-supply
+  
 ./bin/lumera-supply -addr=:8080 -lcd=https://lcd.lumera.io -policy=policy.json -denom=ulume
 ```
 
 ### Docker
 ```
-docker build -t lumera-supply:local .
+docker build \
+  --build-arg GIT_TAG="$(git describe --tags --always --dirty)" \
+  --build-arg GIT_COMMIT="$(git rev-parse --short HEAD)" \
+  -t lumera-supply:local .
+  
 docker run --rm -p 8080:8080 -e LUMERA_LCD_URL=https://lcd.lumera.io lumera-supply:local
 ```
 
@@ -46,15 +54,10 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
-  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
-  "policy-etag": "...",
-  "total": "1000000",
-  "circulating": "...",
-  "non_circulating": "...",
-  "max": null
+  "total": "1000000"
 }
 ```
 
@@ -62,11 +65,9 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
-  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
-  "policy-etag": "...",
   "circulating": "985000",
   "non_circulating": "15000"
 }
@@ -76,11 +77,9 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 {
   "denom": "ulume",
-  "decimals": 6,
   "height": 123,
   "updated_at": "2025-09-28T22:30:00Z",
   "etag": "...",
-  "policy-etag": "...",
   "non_circulating": { "sum": "...", "cohorts": [ ... ] }
 }
 ```
@@ -125,7 +124,10 @@ go test ./...
 Build the one-shot CLI that reproduces the API snapshot locally and prints a full JSON payload with totals and the non-circulating breakdown:
 
 ```bash
-go build -o bin/lumera-supply-cli ./cmd/lumera-supply-cli
+go build -ldflags "-s -w \
+    -X 'main.GitTag=$(git describe --tags --always --dirty)' \
+    -X 'main.GitCommit=$(git rev-parse --short HEAD)'" \
+  -o bin/lumera-supply-cli ./cmd/lumera-supply-cli
 ```
 
 Run it (uses the same LCD and policy as the server):

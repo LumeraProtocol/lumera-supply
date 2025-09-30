@@ -79,13 +79,15 @@ func projectCLI(s *types.SupplySnapshot) any {
 		}
 		coh = append(coh, cohortEntry{Name: c.Name, Reason: c.Reason, Address: c.Address, Items: items, Amount: c.Amount})
 	}
- return struct {
+	return struct {
 		Denom          string    `json:"denom"`
 		Decimals       int       `json:"decimals"`
 		Height         int64     `json:"height"`
 		UpdatedAt      time.Time `json:"updated_at"`
 		ETag           string    `json:"etag"`
 		PolicyETag     string    `json:"policy-etag"`
+		GitHash        string    `json:"git-hash"`
+		GitTag         string    `json:"git-tag"`
 		Total          string    `json:"total"`
 		Circulating    string    `json:"circulating"`
 		NonCirculating nonCirc   `json:"non_circulating"`
@@ -97,6 +99,8 @@ func projectCLI(s *types.SupplySnapshot) any {
 		UpdatedAt:      s.UpdatedAt,
 		ETag:           s.ETag,
 		PolicyETag:     s.PolicyETag,
+		GitHash:        GitCommit,
+		GitTag:         GitTag,
 		Total:          s.Total,
 		Circulating:    s.Circulating,
 		NonCirculating: nonCirc{Sum: s.NonCirculating.Sum, Cohorts: coh},

@@ -53,6 +53,7 @@ func main() {
 	})
 
 	log.Printf("Lumera Supply API listening on %s (lcd=%s denom=%s)", *addr, *lcdURL, *defaultDen)
+	log.Printf("Git tag: %s, Git commit: %s", GitTag, GitCommit)
 	if err := http.ListenAndServe(*addr, srv.Mux()); err != nil {
 		log.Fatal(err)
 	}
