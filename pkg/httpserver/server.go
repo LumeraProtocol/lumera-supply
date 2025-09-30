@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/lumera-labs/lumera-supply/pkg/cache"
 	"github.com/lumera-labs/lumera-supply/pkg/ratelimit"
 	"github.com/lumera-labs/lumera-supply/pkg/supply"
 	"github.com/lumera-labs/lumera-supply/pkg/types"
+	"github.com/lumera-labs/lumera-supply/schema"
 )
 
 type Config struct {
@@ -39,6 +41,9 @@ func New(cfg Config) *Server {
 	s.mux.HandleFunc("/circulating", s.wrap(s.handleCirculating))
 	s.mux.HandleFunc("/non_circulating", s.wrap(s.handleNonCirc))
 	s.mux.HandleFunc("/max", s.wrap(s.handleMax))
+	// swagger/openapi
+	s.mux.HandleFunc("/openapi.yaml", s.handleOpenAPI)
+	s.mux.HandleFunc("/docs", s.handleDocs)
 	return s
 }
 
@@ -387,4 +392,125 @@ func fmtInt(n int64) string {
 		a[i] = '-'
 	}
 	return string(a[i:])
+}
+
+// ---- Swagger/OpenAPI handlers ----
+
+const swaggerUIHTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lumera Supply API — Swagger UI</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css" />
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    #swagger-ui { height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+  <script>
+    window.ui = SwaggerUIBundle({
+      url: '/openapi.yaml',
+      dom_id: '#swagger-ui',
+      presets: [SwaggerUIBundle.presets.apis],
+      layout: 'BaseLayout'
+    });
+  </script>
+</body>
+</html>`
+
+func (s *Server) handleOpenAPI(w http.ResponseWriter, r *http.Request) {
+	if !s.limiter.Allow(r) {
+		w.Header().Set("Retry-After", "1")
+		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+	w.Header().Set("Content-Type", "application/yaml; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+
+	// Compute the public base URL (scheme://host [+ optional prefix]) where this server is accessed
+	pub := publicBaseURL(r)
+
+	// Dynamically inject the current server URL into the embedded OpenAPI YAML as a second server entry
+	b := schema.OpenAPI
+	if pub != "" {
+		// Avoid duplication if already present
+		s := string(b)
+		if !strings.Contains(s, "- url: "+pub) {
+			b = injectServerYAML(b, pub)
+		}
+	}
+	_, _ = w.Write(b)
+}
+
+// publicBaseURL builds the external base URL for this request, honoring common proxy headers.
+func publicBaseURL(r *http.Request) string {
+	scheme := ""
+	if h := r.Header.Get("X-Forwarded-Proto"); h != "" {
+		// use first value if comma-separated
+		scheme = strings.TrimSpace(strings.Split(h, ",")[0])
+	} else if r.TLS != nil {
+		scheme = "https"
+	} else {
+		scheme = "http"
+	}
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	} else {
+		host = strings.TrimSpace(strings.Split(host, ",")[0])
+	}
+	if host == "" {
+		return ""
+	}
+	base := scheme + "://" + host
+	if p := r.Header.Get("X-Forwarded-Prefix"); p != "" {
+		if !strings.HasPrefix(p, "/") {
+			p = "/" + p
+		}
+		// avoid trailing slash duplication
+		if strings.HasSuffix(base, "/") {
+			base = strings.TrimRight(base, "/")
+		}
+		base += strings.TrimRight(p, "/")
+	}
+	return base
+}
+
+// injectServerYAML inserts a new `- url: <url>` item under the `servers:` section of the YAML.
+// If the section is missing, it creates it at the top.
+func injectServerYAML(y []byte, url string) []byte {
+	s := string(y)
+	// Prefer inserting right after the `servers:` line (at beginning or elsewhere)
+	if idx := strings.Index(s, "\nservers:"); idx >= 0 {
+		lineStart := idx + 1
+		if eol := strings.IndexByte(s[lineStart:], '\n'); eol >= 0 {
+			insertPos := lineStart + eol + 1
+			return []byte(s[:insertPos] + "  - url: " + url + "\n" + s[insertPos:])
+		}
+		// no newline after, just append
+		return []byte(s + "\n  - url: " + url + "\n")
+	}
+	if idx := strings.Index(s, "servers:"); idx >= 0 {
+		if eol := strings.IndexByte(s[idx:], '\n'); eol >= 0 {
+			insertPos := idx + eol + 1
+			return []byte(s[:insertPos] + "  - url: " + url + "\n" + s[insertPos:])
+		}
+		return []byte(s + "\n  - url: " + url + "\n")
+	}
+	// If servers section is missing entirely, prepend it
+	return []byte("servers:\n  - url: " + url + "\n" + s)
+}
+
+func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
+	if !s.limiter.Allow(r) {
+		w.Header().Set("Retry-After", "1")
+		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=300")
+	_, _ = w.Write([]byte(swaggerUIHTML))
 }

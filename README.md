@@ -5,6 +5,7 @@ A minimal HTTP service to expose **total**, **non-circulating**, **circulating**
 ## Features
 
 - Endpoints using net/http only: `/total`, `/circulating`, `/max`, `/non_circulating`, `/healthz`
+- Swagger/OpenAPI: `/docs` (Swagger UI), `/openapi.yaml`
 - In-memory snapshot cache (TTL=60s) with background refresher and ETag
 - Policy-driven allowlist (module accounts, disclosed lockups)
 - IBC escrow included via `/ibc/apps/transfer/v1/denoms/{denom}/total_escrow`
