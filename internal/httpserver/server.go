@@ -167,12 +167,16 @@ func (s *Server) handleTotal(w http.ResponseWriter, r *http.Request) {
 	// output minimal fields
 	srv := toTypesSnapshot(snap)
 	out := struct {
-		Denom     string    `json:"denom"`
-		Height    int64     `json:"height"`
-		UpdatedAt time.Time `json:"updated_at"`
-		ETag      string    `json:"etag"`
-		Total     string    `json:"total"`
-	}{srv.Denom, srv.Height, srv.UpdatedAt, srv.ETag, srv.Total}
+		Denom           string   `json:"denom"`
+		Decimals        int      `json:"decimals"`
+		Height          int64    `json:"height"`
+		UpdatedAt       time.Time `json:"updated_at"`
+		ETag            string   `json:"etag"`
+		Total           string   `json:"total"`
+		Circulating     string   `json:"circulating"`
+		NonCirculating  string   `json:"non_circulating"`
+		Max             *string  `json:"max"`
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.Total, srv.Circulating, srv.NonCirc.Sum, srv.Max}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))
@@ -205,11 +209,12 @@ func (s *Server) handleMax(w http.ResponseWriter, r *http.Request) {
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(struct {
 		Denom     string     `json:"denom"`
+		Decimals  int        `json:"decimals"`
 		Height    int64      `json:"height"`
 		UpdatedAt time.Time  `json:"updated_at"`
 		ETag      string     `json:"etag"`
 		Max       *string    `json:"max"`
-	}{snap.Denom, snap.Height, snap.UpdatedAt, snap.ETag, snap.Max})
+	}{snap.Denom, 6, snap.Height, snap.UpdatedAt, snap.ETag, snap.Max})
 }
 
 func (s *Server) handleCirculating(w http.ResponseWriter, r *http.Request) {
@@ -231,13 +236,14 @@ func (s *Server) handleCirculating(w http.ResponseWriter, r *http.Request) {
 	snap := resp.snap
 	srv := toTypesSnapshot(snap)
 	out := struct {
-		Denom       string    `json:"denom"`
-		Height      int64     `json:"height"`
-		UpdatedAt   time.Time `json:"updated_at"`
-		ETag        string    `json:"etag"`
-		Circulating string    `json:"circulating"`
-		Breakdown   nonCirc   `json:"non_circulating"`
-	}{srv.Denom, srv.Height, srv.UpdatedAt, srv.ETag, srv.Circulating, srv.NonCirc}
+		Denom           string    `json:"denom"`
+		Decimals        int       `json:"decimals"`
+		Height          int64     `json:"height"`
+		UpdatedAt       time.Time `json:"updated_at"`
+		ETag            string    `json:"etag"`
+		Circulating     string    `json:"circulating"`
+		NonCirculating  string    `json:"non_circulating"`
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.Circulating, srv.NonCirc.Sum}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))
@@ -266,11 +272,12 @@ func (s *Server) handleNonCirc(w http.ResponseWriter, r *http.Request) {
 	srv := toTypesSnapshot(snap)
 	out := struct {
 		Denom     string    `json:"denom"`
+		Decimals  int       `json:"decimals"`
 		Height    int64     `json:"height"`
 		UpdatedAt time.Time `json:"updated_at"`
 		ETag      string    `json:"etag"`
 		Breakdown nonCirc   `json:"non_circulating"`
-	}{srv.Denom, srv.Height, srv.UpdatedAt, srv.ETag, srv.NonCirc}
+	}{srv.Denom, 6, srv.Height, srv.UpdatedAt, srv.ETag, srv.NonCirc}
 	w.Header().Set("ETag", srv.ETag)
 	w.Header().Set("X-Block-Height", itoa64(srv.Height))
 	w.Header().Set("X-Updated-At", srv.UpdatedAt.Format(time.RFC3339))

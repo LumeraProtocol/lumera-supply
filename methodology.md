@@ -23,9 +23,9 @@ circulating(H)  = total(H) - non_circ(H)
 
 1. **Module & escrow accounts** (no private key; governance/logic-gated):
    - **1.1** Community Pool (distribution module) - `/cosmos/distribution/v1beta1/community_pool`
-   - **1.2** Claim escrow (Claim module) - `cosmos/auth/v1beta1/module_accounts/claim` -> `/cosmos/bank/v1beta1/balances/MODULE_ADDRESS`
+   - **1.2** Claim escrow (Claim module) - `/cosmos/bank/v1beta1/balances/MODULE_ADDRESS`
    - **1.3** IBC/ICS escrow accounts - `/ibc/apps/transfer/v1/denoms/ulume/total_escrow`
-   - **1.4** Other protocol escrows (DEX/auction escrows, if any) - `/ibc/apps/transfer/v1/denoms/ulume/total_escrow`
+   - **1.4** Other protocol escrows that are different from `transfer` (DEX/auction escrows, if any)
 2. **Protocol/foundation-originated vesting (locked portion only):**
    - **1.1** Genesis/foundation allocations with on-chain vesting - [policy.json](policy.json)
    - **1.2** Claimed “delayed” accounts (locked tranche) - `/LumeraProtocol/lumera/claim/list_claimed/1..4`
@@ -41,7 +41,7 @@ Notes:
 
 * Any balance in a normal account without transfer restrictions.
 * Staked balances from unlocked accounts.
-* **User-created** vesting accounts via `MsgCreateVestingAccount` (permissionless “self-lock”) are **treated as circulating** by default (to avoid manipulation), unless explicitly designated as protocol/foundation lockups.
+* **User-created** vesting accounts via `MsgCreateVestingAccount` (permissionless “self-lock”) are **treated as circulating** by default (to avoid manipulation).
 
 ## Community Pool
 
@@ -49,7 +49,7 @@ Always non-circulating while held by the distribution module. When governance sp
 
 ## Foundation Genesis Cohorts (provenance)
 
-The following genesis cohorts exist (values are illustrative quantities and lock windows; exact vesting math is taken from on-chain account state):
+The following genesis cohorts exist:
 
 | Cohort             |       Amount LUME | Start (mo) |         End (mo) | Custody             |
 | ------------------ | ----------------: | ---------: | ---------------: | ------------------- |
@@ -127,45 +127,79 @@ All responses include:
 ### Endpoints
 
 1. `GET /total?denom=ulume`
-   Returns `amount` = total supply at the latest finalized height.
+   Returns the latest snapshot including total supply, circulating, non_circulating sum, and max.
+   ```
+   {
+     "denom": "ulume",
+     "decimals": 6,
+     "height": …,
+     "updated_at": "…",
+     "etag": "…",
+     "total": "…",
+     "circulating": "…",
+     "non_circulating": "…",
+     "max": null
+   }
+   ```
 
 2. `GET /circulating?denom=ulume`
    ```
    {
      "denom": "ulume",
-     "decimals": 6,
-     "amount": "…",
+     "decimals":6,
      "height": …,
      "updated_at": "…",
-     "methodology_url": "https://docs.lumera.org/supply-methodology",
-     "breakdown": {
-       "total": "…",
-       "non_circulating": {
-         "module_accounts": {
-           "community_pool": "…",
-           "claim_escrow": "…",
-           "ibc_escrow": "…",
-           "other": "…"
-         },
-         "vesting_locked": {
-           "foundation_genesis": "…",
-           "supernode_bootstrap": "…",
-           "claim_delayed": "…"
-         },
-         "disclosed_lockups": "…"
-       }
-     }
+     "etag": "",
+     "circulating": "…",
+     "non_circulating": "…"
    }
    ```
 
-3. `GET /max?denom=ulume`
-   ```
-   { "denom":"ulume","decimals":6,"amount":null,"rationale":"uncapped inflation (no protocol hard cap)","height":…,"updated_at":"…" }
-   ```
-   If a hard cap exists by code/params, return the numeric cap and update `rationale`.
-
-4. `GET /non_circulating?denom=ulume`
+3. `GET /non_circulating?denom=ulume`
    Returns the **address lists** and per-cohort sums so auditors can reproduce the calculation at `height`.
+   ```
+   { 
+      "denom":"ulume",
+      "decimals":6,
+      "height":…,
+      "updated_at":"…",
+      "non_circulating": {
+        "sum": "179591804015777",
+        "cohorts": [
+        {
+          "name": "ibc_escrow",
+          "reason": "ICS20 transfer escrows",
+          "amount": "200014020264"
+        },
+        {
+          "name": "foundation_genesis",
+          "reason": "protocol/foundation vesting locked portion",
+          "items": [
+            {
+              "address": "lumera134tmfqteaytw30tpetkq65dnyx595wqqd0uf45",
+              "amount": "5000000000000",
+              "end_date": "2025-12-13T04:00:00Z"
+            },
+            ...
+          ],
+        },
+        ...
+        ]
+      }          
+   }
+   ```
+
+4. `GET /max?denom=ulume`
+   ```
+   { 
+      "denom":"ulume",
+      "decimals":6,
+      "height":…,
+      "updated_at":"…"
+      "etag":"…"
+      "amount":null,
+   }
+   ```
 
 ### Semantics & SLAs
 
