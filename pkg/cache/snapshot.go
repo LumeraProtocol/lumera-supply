@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lumera-labs/lumera-supply/internal/supply"
-	"github.com/lumera-labs/lumera-supply/internal/types"
+	"github.com/lumera-labs/lumera-supply/pkg/supply"
+	"github.com/lumera-labs/lumera-supply/pkg/types"
 )
 
 type Options struct {
@@ -14,11 +14,11 @@ type Options struct {
 }
 
 type SnapshotCache struct {
-	mu    sync.RWMutex
-	snap  *types.SupplySnapshot
-	etag  string
-	ttl   time.Duration
-	comp  *supply.Computer
+	mu   sync.RWMutex
+	snap *types.SupplySnapshot
+	etag string
+	ttl  time.Duration
+	comp *supply.Computer
 }
 
 func NewSnapshotCache(comp *supply.Computer, opt Options) *SnapshotCache {

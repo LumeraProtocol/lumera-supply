@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lumera-labs/lumera-supply/internal/lcd"
-	"github.com/lumera-labs/lumera-supply/internal/policy"
-	"github.com/lumera-labs/lumera-supply/internal/types"
-	"github.com/lumera-labs/lumera-supply/internal/vesting"
+	"github.com/lumera-labs/lumera-supply/pkg/lcd"
+	"github.com/lumera-labs/lumera-supply/pkg/policy"
+	"github.com/lumera-labs/lumera-supply/pkg/types"
+	"github.com/lumera-labs/lumera-supply/pkg/vesting"
 )
 
 type Computer struct {
@@ -76,10 +76,10 @@ func (c *Computer) ComputeSnapshot(denom string) (*types.SupplySnapshot, error) 
 				continue
 			}
 			breakdown.Cohorts = append(breakdown.Cohorts, types.CohortEntry{
-				Name:   "module:" + accountName,
-				Reason: "protocol-controlled module account",
+				Name:    "module:" + accountName,
+				Reason:  "protocol-controlled module account",
 				Address: accountAddress,
-				Amount: amt,
+				Amount:  amt,
 			})
 		}
 
@@ -208,9 +208,9 @@ func (c *Computer) ComputeSnapshot(denom string) (*types.SupplySnapshot, error) 
 
 	etag := computeETag(height, denom, total, circ.String(), breakdown.Sum)
 
-	var max *string
+	var maxSupply *string
 	if c.policy != nil && c.policy.MaxSupply != nil {
-		max = c.policy.MaxSupply
+		maxSupply = c.policy.MaxSupply
 	}
 
 	return &types.SupplySnapshot{
@@ -220,7 +220,7 @@ func (c *Computer) ComputeSnapshot(denom string) (*types.SupplySnapshot, error) 
 		ETag:           etag,
 		Total:          total,
 		Circulating:    circ.String(),
-		Max:            max,
+		Max:            maxSupply,
 		NonCirculating: breakdown,
 	}, nil
 }
@@ -299,13 +299,17 @@ func (c *Computer) lockedAndEndFromAuthAccount(address string, now time.Time, de
 	switch {
 	case strings.Contains(typ, "PermanentLockedAccount"):
 		return ve.PermanentLocked(ov), "forever", typ, nil
- case strings.Contains(typ, "DelayedVestingAccount"):
+	case strings.Contains(typ, "DelayedVestingAccount"):
 		endStr := ""
-		if !end.IsZero() { endStr = end.Format(time.RFC3339) }
+		if !end.IsZero() {
+			endStr = end.Format(time.RFC3339)
+		}
 		return ve.DelayedLocked(ov, now, end), endStr, typ, nil
-case strings.Contains(typ, "ContinuousVestingAccount"):
+	case strings.Contains(typ, "ContinuousVestingAccount"):
 		endStr := ""
-		if !end.IsZero() { endStr = end.Format(time.RFC3339) }
+		if !end.IsZero() {
+			endStr = end.Format(time.RFC3339)
+		}
 		return ve.ContinuousLocked(ov, now, start, end), endStr, typ, nil
 	case strings.Contains(typ, "PeriodicVestingAccount") || strings.Contains(typ, "ClawbackVestingAccount"):
 		// Build periods timeline and remember the last end time

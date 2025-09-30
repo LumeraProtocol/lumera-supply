@@ -30,12 +30,12 @@ type AddressItem struct {
 }
 
 type CohortEntry struct {
-	Name    string        `json:"name"`
-	Reason  string        `json:"reason"`
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
 	// Address is used for single-address cohorts (e.g., module accounts).
-	Address string        `json:"address,omitempty"`
+	Address string `json:"address,omitempty"`
 	// Items is used to list per-address details for cohorts.
-	Items   []AddressItem `json:"items,omitempty"`
+	Items []AddressItem `json:"items,omitempty"`
 	// Amount is the total amount for the cohort (sum of items when present).
-	Amount  string        `json:"amount"`
+	Amount string `json:"amount"`
 }

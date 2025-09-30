@@ -97,3 +97,40 @@ go test ./...
 ## Notes
 - The current implementation treats user-created vesting accounts as circulating by default and only excludes cohorts provided by policy.
 - Integration with chain vesting account types can be added in the cohort calculators using the provided vesting math engine.
+
+## CLI Auditor Tool
+
+Build the one-shot CLI that reproduces the API snapshot locally and prints a full JSON payload with totals and the non-circulating breakdown:
+
+```
+go build -o bin/lumera-supply-cli ./cmd/lumera-supply-cli
+```
+
+Run it (uses the same LCD and policy as the server):
+
+```
+./bin/lumera-supply-cli -lcd=http://localhost:1317 -policy=policy.json -denom=ulume
+```
+
+Environment variable equivalents:
+- LUMERA_LCD_URL
+- LUMERA_POLICY_PATH
+- LUMERA_DEFAULT_DENOM
+
+Output shape (pretty-printed):
+```
+{
+  "denom": "ulume",
+  "decimals": 6,
+  "height": 123,
+  "updated_at": "2025-09-28T22:30:00Z",
+  "etag": "...",
+  "total": "...",
+  "circulating": "...",
+  "non_circulating": {
+    "sum": "...",
+    "cohorts": [ { "name": "ibc_escrow", "amount": "..." }, ... ]
+  },
+  "max": null
+}
+```

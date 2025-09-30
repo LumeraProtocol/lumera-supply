@@ -9,8 +9,8 @@ import (
 )
 
 type claimItem struct {
-	OldAddress  string `json:"oldAddress"`
-	Balance     []struct {
+	OldAddress string `json:"oldAddress"`
+	Balance    []struct {
 		Denom  string `json:"denom"`
 		Amount string `json:"amount"`
 	} `json:"balance"`
@@ -32,8 +32,11 @@ func TestClaimListClaimed_NewShape(t *testing.T) {
 	// Prepare response matching the issue description
 	resp := claimResp{
 		Claims: []claimItem{{
-			OldAddress:  "Ptka6xgtFNymSsWYoPQM52p39TYmeMTniXz",
-			Balance:     []struct{ Denom string `json:"denom"`; Amount string `json:"amount"` }{{Denom: "ulume", Amount: "12345"}},
+			OldAddress: "Ptka6xgtFNymSsWYoPQM52p39TYmeMTniXz",
+			Balance: []struct {
+				Denom  string `json:"denom"`
+				Amount string `json:"amount"`
+			}{{Denom: "ulume", Amount: "12345"}},
 			Claimed:     true,
 			ClaimTime:   "1757782016",
 			DestAddress: "lumera1le9lc6r8zjts72mj4cswg4y4nggsq094kv2yze",

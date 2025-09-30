@@ -227,7 +227,9 @@ func (c *Client) AuthAccount(address string) (json.RawMessage, string, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&outer); err != nil {
 		return nil, "", err
 	}
-	var t struct{ Type string `json:"@type"` }
+	var t struct {
+		Type string `json:"@type"`
+	}
 	_ = json.Unmarshal(outer.Account, &t)
 	return outer.Account, t.Type, nil
 }

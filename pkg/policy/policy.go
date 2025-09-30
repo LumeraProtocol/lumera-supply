@@ -44,12 +44,12 @@ type FoundationEntry struct {
 }
 
 type SupernodeEntry struct {
-	Name            string     `json:"name"`
-	Address         string     `json:"address"`
-	Permanent       bool       `json:"permanent,omitempty"`
-	DurationMonths  *int       `json:"duration_months,omitempty"`
-	StartTime       *time.Time `json:"start_time,omitempty"`
-	EndTime         *time.Time `json:"end_time,omitempty"`
+	Name           string     `json:"name"`
+	Address        string     `json:"address"`
+	Permanent      bool       `json:"permanent,omitempty"`
+	DurationMonths *int       `json:"duration_months,omitempty"`
+	StartTime      *time.Time `json:"start_time,omitempty"`
+	EndTime        *time.Time `json:"end_time,omitempty"`
 }
 
 type Cohort struct {

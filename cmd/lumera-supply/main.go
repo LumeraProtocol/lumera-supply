@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/lumera-labs/lumera-supply/internal/cache"
-	"github.com/lumera-labs/lumera-supply/internal/httpserver"
-	"github.com/lumera-labs/lumera-supply/internal/lcd"
-	"github.com/lumera-labs/lumera-supply/internal/policy"
-	"github.com/lumera-labs/lumera-supply/internal/supply"
+	"github.com/lumera-labs/lumera-supply/pkg/cache"
+	"github.com/lumera-labs/lumera-supply/pkg/httpserver"
+	"github.com/lumera-labs/lumera-supply/pkg/lcd"
+	"github.com/lumera-labs/lumera-supply/pkg/policy"
+	"github.com/lumera-labs/lumera-supply/pkg/supply"
 )
 
 func main() {

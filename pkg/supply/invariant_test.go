@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lumera-labs/lumera-supply/internal/lcd"
-	"github.com/lumera-labs/lumera-supply/internal/policy"
+	"github.com/lumera-labs/lumera-supply/pkg/lcd"
+	"github.com/lumera-labs/lumera-supply/pkg/policy"
 )
 
 type latestBlockResponse struct {
@@ -40,15 +40,31 @@ func TestInvariantTotalEqualsCircPlusNonCirc(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.URL.Path == "/cosmos/base/tendermint/v1beta1/blocks/latest":
-			json.NewEncoder(w).Encode(latestBlockResponse{Block: struct{ Header struct{ Height string `json:"height"`; Time time.Time `json:"time"` } `json:"header"` }{Header: struct{ Height string `json:"height"`; Time time.Time `json:"time"` }{Height: "12345", Time: time.Now().UTC()}}})
+			json.NewEncoder(w).Encode(latestBlockResponse{Block: struct {
+				Header struct {
+					Height string    `json:"height"`
+					Time   time.Time `json:"time"`
+				} `json:"header"`
+			}{Header: struct {
+				Height string    `json:"height"`
+				Time   time.Time `json:"time"`
+			}{Height: "12345", Time: time.Now().UTC()}}})
 		case r.URL.Path == "/cosmos/bank/v1beta1/supply/by_denom":
-			json.NewEncoder(w).Encode(struct{ Amount amount `json:"amount"` }{Amount: amount{Denom: "ulume", Amount: total}})
+			json.NewEncoder(w).Encode(struct {
+				Amount amount `json:"amount"`
+			}{Amount: amount{Denom: "ulume", Amount: total}})
 		case r.URL.Path == "/ibc/apps/transfer/v1/denoms/ulume/total_escrow":
-			json.NewEncoder(w).Encode(struct{ Amount amount `json:"amount"` }{Amount: amount{Amount: ibcEscrow}})
+			json.NewEncoder(w).Encode(struct {
+				Amount amount `json:"amount"`
+			}{Amount: amount{Amount: ibcEscrow}})
 		case r.URL.Path == "/cosmos/bank/v1beta1/balances/"+modAddr+"/by_denom":
-			json.NewEncoder(w).Encode(struct{ Balance amount `json:"balance"` }{Balance: amount{Amount: modBal}})
+			json.NewEncoder(w).Encode(struct {
+				Balance amount `json:"balance"`
+			}{Balance: amount{Amount: modBal}})
 		case r.URL.Path == "/cosmos/bank/v1beta1/balances/"+lockAddr+"/by_denom":
-			json.NewEncoder(w).Encode(struct{ Balance amount `json:"balance"` }{Balance: amount{Amount: lockBal}})
+			json.NewEncoder(w).Encode(struct {
+				Balance amount `json:"balance"`
+			}{Balance: amount{Amount: lockBal}})
 		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
