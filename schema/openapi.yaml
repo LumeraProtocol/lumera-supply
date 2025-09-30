@@ -1,0 +1,52 @@
+openapi: 3.1.0
+info:
+  title: Lumera Supply API
+  version: 1.0.0
+servers:
+  - url: https://api.lumera.org
+paths:
+  /total:
+    get:
+      summary: Get total supply
+      parameters:
+        - in: query
+          name: denom
+          schema: { type: string, default: ulume }
+      responses:
+        "200": { description: OK }
+  /circulating:
+    get:
+      summary: Get circulating supply
+      parameters:
+        - in: query
+          name: denom
+          schema: { type: string, default: ulume }
+      responses:
+        "200": { description: OK }
+  /non_circulating:
+    get:
+      summary: Get non-circulating breakdown
+      parameters:
+        - in: query
+          name: denom
+          schema: { type: string, default: ulume }
+        - in: query
+          name: verbose
+          schema: { type: integer, enum: [0,1], default: 0 }
+      responses:
+        "200": { description: OK }
+  /max:
+    get:
+      summary: Get max supply (null if N/A)
+      responses:
+        "200": { description: OK }
+  /status:
+    get:
+      summary: Service health and last snapshot
+      responses:
+        "200": { description: OK }
+  /version:
+    get:
+      summary: Service & policy versions
+      responses:
+        "200": { description: OK }

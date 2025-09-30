@@ -1,8 +1,9 @@
-# Lumera Supply API
+# Lumera Supply Service
 
-Stateless HTTP service to provide exchange-grade supply figures for LUME (total, circulating, max, and non-circulating breakdown), computed from on-chain data (Cosmos SDK LCD) and policy-driven lockups.
+A minimal HTTP service to expose **total**, **non-circulating**, **circulating**, and **max** supply figures for the Lumera blockchain, computed from on-chain data (Cosmos SDK LCD) and policy-driven lockups. Intended for use by exchanges, indexers, and market data providers.
 
-Highlights
+## Features
+
 - Endpoints using net/http only: `/total`, `/circulating`, `/max`, `/non_circulating`, `/healthz`
 - In-memory snapshot cache (TTL=60s) with background refresher and ETag
 - Policy-driven allowlist (module accounts, disclosed lockups)
@@ -12,13 +13,13 @@ Highlights
 
 ## Build & Run
 
-Local build
+### Build locally
 ```
 go build -o bin/lumera-supply ./cmd/lumera-supply
 ./bin/lumera-supply -addr=:8080 -lcd=https://lcd.lumera.io -policy=policy.json -denom=ulume
 ```
 
-Docker:
+### Docker
 ```
 docker build -t lumera-supply:local .
 docker run --rm -p 8080:8080 -e LUMERA_LCD_URL=https://lcd.lumera.io lumera-supply:local
@@ -90,6 +91,17 @@ All endpoints accept `?denom=ulume` (default from config). Responses include hea
 ```
 
 - `GET /healthz` → `{ "status": "ok", "time": "..." }`
+
+## Quick examples
+
+```
+curl -s 'https://api.lumera.org/circulating?denom=ulume' | jq
+curl -s 'https://api.lumera.org/non_circulating?verbose=1' | jq
+curl -s 'https://api.lumera.org/total' | jq
+curl -s 'https://api.lumera.org/status' | jq
+curl -s 'https://api.lumera.org/version' | jq
+```
+
 
 ## Tests
 ```

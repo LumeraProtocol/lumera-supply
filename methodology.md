@@ -2,13 +2,27 @@
 
 ## Scope
 
-This document defines how Lumera computes and publishes Total Supply, Circulating Supply, and Max Supply for the LUME asset, and specifies the HTTPS endpoints exchanges and data providers should query.
+This document defines how Lumera calculates and publishes **Total Supply**, **Circulating Supply**, and **Max Supply** on the LUME token on the Lumera Protocol. It further specifies the HTTPS endpoints that exchanges, indexers, and market data providers should query 
+
+## Description
+
+The goal is to provide a transparent, auditable, and reproducible methodology that aligns with industry standards and market data providers.  
+
+At a high level, circulating supply is derived from **total on-chain supply** at a given block height, minus specific non-circulating categories:  
+- module accounts and the governance-controlled community pool,  
+- IBC escrow balances and other disclosed escrow contracts, and  
+- the locked portions of official vesting/lockup allocations (team, treasury, ecosystem).  
+
+Everything else — including user balances, unlocked allocations, and staked tokens — is considered circulating.
 
 ## Definitions
 
 * **Total Supply (LUME):** On-chain total as reported by `x/bank` at block *H*.
 * **Circulating Supply (LUME):** Total Supply minus balances that are not freely transferable at block *H*.
 * **Max Supply:** Not applicable - no hard cap exists, `null`.
+* **Staking treatment.** Staked but *unlocked* LUME **counts as circulating**. Only the *locked* portion of vesting/lockup accounts is excluded from circulating supply.
+* **Default denom.** Unless otherwise specified via the `?denom` query parameter, all endpoints default to `ulume`.
+
 
 ## High-level formula
 
@@ -41,11 +55,13 @@ Notes:
 
 * Any balance in a normal account without transfer restrictions.
 * Staked balances from unlocked accounts.
-* **User-created** vesting accounts via `MsgCreateVestingAccount` (permissionless “self-lock”) are **treated as circulating** by default (to avoid manipulation).
+* **User-created vesting accounts** (e.g., `MsgCreateVestingAccount`) are treated as **circulating by default**. Rationale: anyone could self-lock to distort supply. **Exception:** if such accounts are explicitly listed in `policy/policy.json` under a vesting/lockup cohort, the **locked** portion is excluded.
 
 ## Community Pool
 
 Always non-circulating while held by the distribution module. When governance spends from the pool to a standard account, that amount becomes circulating at the spend block.
+
+Community pool amounts are published as DecCoins. We **truncate** (floor) to the integer base-denom amount of `ulume` at height H when computing non-circulating.
 
 ## Foundation Genesis Cohorts (provenance)
 
@@ -71,7 +87,7 @@ The following genesis cohorts exist:
 
 ## Exact vesting math (per account, denom = LUME)
 
-At chain time/height **H**:
+We compute the **locked** portion at height/time H via the chain’s spendable logic:
 
 Definitions
 - **ov** = `original_vesting` (for ***LUME***) from `BaseVestingAccount`
@@ -114,16 +130,20 @@ Per-type **V_rem(H)**
 
 Base URL: `https://api.lumera.org/supply`
 
-All responses include:
-```
+All responses include a single, consistent `height` (int64), `updated_at` (RFC3339), and `etag` (policy+inputs identifier). Values are base-denom integers.
+
+Example:
+```json
 {
   "denom": "ulume",
   "decimals": 6,
   "amount": "1234567890123",
   "height": 1234567,
-  "updated_at": "2025-09-25T21:00:00Z"
+  "updated_at": "2025-09-29T22:11:33Z",
+  "etag": "W/\"policy-v1.3-5c1a\""
 }
 ```
+
 ### Endpoints
 
 1. `GET /total?denom=ulume`
@@ -212,3 +232,13 @@ All responses include:
 
 1. Machine-readable **allowlist** repository - URL
 2. Historical JSON snapshots `{height,total,non_circulating_breakdown,circulating}` for audit - URL
+
+## Reviewer Notes
+
+- **We do not exclude all vesting accounts by default.** Only official team/treasury/eco lockups listed in `policy/policy.json` are excluded, and only their locked portion. User-created vesting accounts remain circulating unless explicitly listed.  
+- **Staked tokens are included.** Bonded tokens remain the property of the holder and can be unbonded, so they count toward circulating supply.  
+- **IBC escrow balances are excluded.** Tokens in escrow are in transit and not currently spendable.  
+- **All exclusions are transparent.** `policy/policy.json` is public and versioned; each API response includes `policy_etag` for reproducibility.  
+- **Auditable at any block height.** Given (`height`, `policy_etag`), third parties can reproduce the figure using LCD/gRPC queries.
+
+This methodology aligns with market standards for circulating supply and ensures both transparency and auditability.
