@@ -1,0 +1,39 @@
+[Unit]
+Description=Lumera Supply API (Docker)
+Documentation=https://github.com/lumera-labs/lumera-supply
+After=docker.service network-online.target
+Wants=docker.service network-online.target
+
+[Service]
+# Configure via /etc/default/lumera-supply if present
+EnvironmentFile=-/etc/default/lumera-supply
+
+# Restart policy (let systemd handle restarts)
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=0
+KillMode=control-group
+
+# Make sure no old container is left over before starting
+ExecStartPre=-/usr/bin/docker rm -f ${CONTAINER_NAME}
+
+# Optional: pull image from registry (uncomment if you use a remote image)
+# ExecStartPre=/usr/bin/docker pull ${IMAGE}
+
+# Run the container
+ExecStart=/usr/bin/docker run \
+  --name ${CONTAINER_NAME} \
+  -p ${PORT}:8080 \
+  -e LUMERA_LCD_URL=${LUMERA_LCD_URL} \
+  -e LUMERA_DEFAULT_DENOM=${LUMERA_DEFAULT_DENOM} \
+  -e LUMERA_HTTP_ADDR=:8080 \
+  -v ${POLICY_HOST_PATH}:/etc/lumera/policy.json:ro \
+  ${EXTRA_DOCKER_ARGS} \
+  ${IMAGE}
+
+# Graceful stop and cleanup
+ExecStop=/usr/bin/docker stop ${CONTAINER_NAME}
+ExecStopPost=-/usr/bin/docker rm -f ${CONTAINER_NAME}
+
+[Install]
+WantedBy=multi-user.target

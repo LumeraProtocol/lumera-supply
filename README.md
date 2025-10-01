@@ -116,6 +116,22 @@ go test ./...
 - Vesting engine unit tests (golden-like checks for each type)
 - Supply invariant test uses httptest LCD to verify `total = circulating + non_circulating`
 
+## Reverse proxy (nginx)
+
+To serve the API under https://api.lumera.io/supply/ behind nginx, use the provided config at deploy/nginx.conf. It proxies to the app on 127.0.0.1:8080 and sets the necessary X-Forwarded-* headers including X-Forwarded-Prefix so docs and OpenAPI work under the /supply prefix.
+
+Quick setup (Debian/Ubuntu):
+- sudo cp deploy/nginx.conf /etc/nginx/sites-available/lumera-supply.conf
+- sudo ln -s /etc/nginx/sites-available/lumera-supply.conf /etc/nginx/sites-enabled/
+- sudo nginx -t && sudo systemctl reload nginx
+
+Start the app on port 8080:
+- ./bin/lumera-supply -addr=:8080 -lcd=https://lcd.lumera.io -policy=policy.json -denom=ulume
+
+Notes:
+- server_name is api.lumera.io and the app is exposed under the /supply path.
+- If you terminate TLS at nginx, keep proxy_set_header X-Forwarded-Proto $scheme; so the app generates https links in /openapi.yaml and /docs.
+
 ## Notes
 - The current implementation treats user-created vesting accounts as circulating by default and only excludes cohorts provided by policy.
 - Integration with chain vesting account types can be added in the cohort calculators using the provided vesting math engine.
@@ -159,3 +175,38 @@ Output shape (pretty-printed):
   "max": null
 }
 ```
+
+
+## Systemd service (Docker)
+
+Run the service as a managed Docker container with systemd.
+
+1) Build or choose an image
+- Local build (from this repo):
+  docker build \
+    --build-arg GIT_TAG="$(git describe --tags --always --dirty)" \
+    --build-arg GIT_COMMIT="$(git rev-parse --short HEAD)" \
+    -t lumera-supply:local .
+- Or set IMAGE to a published tag in /etc/default/lumera-supply.
+
+2) Install the unit
+- sudo cp deploy/lumera-supply.service /etc/systemd/system/
+- sudo cp deploy/lumera-supply.env /etc/default/lumera-supply
+
+3) Configure
+- Edit /etc/default/lumera-supply as needed (IMAGE, PORT, LCD URL, etc.).
+- Ensure a policy file exists at /etc/lumera/policy.json (or adjust POLICY_HOST_PATH in /etc/default/lumera-supply). The container mounts it to /etc/lumera/policy.json inside the container.
+
+4) Enable and start
+- sudo systemctl daemon-reload
+- sudo systemctl enable --now lumera-supply
+
+5) Verify
+- systemctl status lumera-supply
+- journalctl -u lumera-supply -f
+- curl -s http://localhost:8080/healthz
+
+Notes
+- The unit depends on docker.service and network-online.target.
+- Logs are available via journalctl; you can customize EXTRA_DOCKER_ARGS in /etc/default/lumera-supply (e.g., networking, DNS, or log driver settings).
+- If you serve the API behind nginx under /supply, use deploy/nginx.conf from this repo.
