@@ -49,6 +49,33 @@ func New(cfg Config) *Server {
 
 func (s *Server) Mux() *http.ServeMux { return s.mux }
 
+// ServeHTTP implements http.Handler and transparently strips any external
+// prefix conveyed via X-Forwarded-Prefix from the request path before routing
+// to the internal mux. This allows running behind proxies that do not rewrite
+// the URI (e.g., serving under /supply without nginx "proxy_pass .../" semantics).
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	pfx := r.Header.Get("X-Forwarded-Prefix")
+	if pfx != "" && pfx != "/" {
+		if !strings.HasPrefix(pfx, "/") {
+			pfx = "/" + pfx
+		}
+		// Only strip if the incoming path actually starts with the prefix
+		if strings.HasPrefix(r.URL.Path, pfx) {
+			trimmed := strings.TrimPrefix(r.URL.Path, pfx)
+			if trimmed == "" {
+				trimmed = "/"
+			} else if !strings.HasPrefix(trimmed, "/") {
+				trimmed = "/" + trimmed
+			}
+			r2 := r.Clone(r.Context())
+			r2.URL.Path = trimmed
+			s.mux.ServeHTTP(w, r2)
+			return
+		}
+	}
+	s.mux.ServeHTTP(w, r)
+}
+
 func (s *Server) wrap(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if !s.limiter.Allow(r) {
@@ -411,12 +438,27 @@ const swaggerUIHTML = `<!DOCTYPE html>
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
-    window.ui = SwaggerUIBundle({
-      url: 'openapi.yaml',
-      dom_id: '#swagger-ui',
-      presets: [SwaggerUIBundle.presets.apis],
-      layout: 'BaseLayout'
-    });
+    (function() {
+      // Build spec URL that preserves any external prefix and tolerates /docs or /docs/
+      var p = window.location.pathname;
+      var specPath;
+      if (p.endsWith('/docs/')) {
+        specPath = p.slice(0, -6) + 'openapi.yaml'; // remove 'docs/' then add openapi.yaml
+      } else if (p.endsWith('/docs')) {
+        specPath = p.slice(0, -5) + '/openapi.yaml'; // remove 'docs' then add /openapi.yaml
+      } else {
+        // Fallback: same directory
+        var base = p.replace(/[^\/]*$/, '');
+        if (!base.endsWith('/')) base += '/';
+        specPath = base + 'openapi.yaml';
+      }
+      window.ui = SwaggerUIBundle({
+        url: specPath,
+        dom_id: '#swagger-ui',
+        presets: [SwaggerUIBundle.presets.apis],
+        layout: 'BaseLayout'
+      });
+    })();
   </script>
 </body>
 </html>`
@@ -510,11 +552,7 @@ func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
 		return
 	}
-	// Normalize to /docs without trailing slash to ensure relative asset paths work
-	if r.URL.Path != "/docs" {
-		http.Redirect(w, r, "/docs", http.StatusMovedPermanently)
-		return
-	}
+	// Serve the docs UI for both /docs and /docs/ without redirecting to preserve external prefixes
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "public, max-age=300")
 	_, _ = w.Write([]byte(swaggerUIHTML))
