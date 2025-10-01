@@ -177,6 +177,35 @@ Output shape (pretty-printed):
 ```
 
 
+## Systemd service (native)
+
+Run the service directly on the host (no Docker) and manage it with systemd.
+
+1) Install the binary
+- sudo install -m 0755 bin/lumera-supply /usr/local/bin/lumera-supply
+
+2) Install the unit and environment file
+- sudo cp deploy/lumera-supply-native.service /etc/systemd/system/
+- sudo cp deploy/lumera-supply-native.env /etc/default/lumera-supply-native
+
+3) Configure
+- Edit /etc/default/lumera-supply-native (HTTP addr, LCD URL, default denom, policy path).
+- Ensure a policy file exists at /etc/lumera/policy.json (or set LUMERA_POLICY_PATH accordingly).
+- Optional: to run as a non-root user, create a user and uncomment User= in the unit.
+
+4) Enable and start
+- sudo systemctl daemon-reload
+- sudo systemctl enable --now lumera-supply-native
+
+5) Verify
+- systemctl status lumera-supply-native
+- journalctl -u lumera-supply-native -f
+- curl -s http://localhost:8080/healthz
+
+Notes
+- This unit depends on network-online.target.
+- It works seamlessly with the provided nginx reverse proxy under /supply (deploy/nginx.conf).
+
 ## Systemd service (Docker)
 
 Run the service as a managed Docker container with systemd.

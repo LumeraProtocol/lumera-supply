@@ -1,0 +1,27 @@
+[Unit]
+Description=Lumera Supply API (native)
+Documentation=https://github.com/lumera-labs/lumera-supply
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Configure via /etc/default/lumera-supply-native if present
+EnvironmentFile=-/etc/default/lumera-supply-native
+
+# If you run as a non-root user, uncomment and set a user that can read the policy file
+#User=lumera
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=0
+KillMode=control-group
+
+# Run the binary directly (relies on environment variables above)
+ExecStart=/usr/local/bin/lumera-supply
+
+# Optional working directory (uncomment if needed)
+#WorkingDirectory=/var/lib/lumera-supply
+
+[Install]
+WantedBy=multi-user.target
