@@ -138,6 +138,7 @@ Notes:
 
 ## CLI Auditor Tool
 
+
 Build the one-shot CLI that reproduces the API snapshot locally and prints a full JSON payload with totals and the non-circulating breakdown:
 
 ```bash

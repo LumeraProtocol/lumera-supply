@@ -412,7 +412,7 @@ const swaggerUIHTML = `<!DOCTYPE html>
   <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
   <script>
     window.ui = SwaggerUIBundle({
-      url: '/openapi.yaml',
+      url: 'openapi.yaml',
       dom_id: '#swagger-ui',
       presets: [SwaggerUIBundle.presets.apis],
       layout: 'BaseLayout'
@@ -508,6 +508,11 @@ func (s *Server) handleDocs(w http.ResponseWriter, r *http.Request) {
 	if !s.limiter.Allow(r) {
 		w.Header().Set("Retry-After", "1")
 		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+	// Normalize to /docs without trailing slash to ensure relative asset paths work
+	if r.URL.Path != "/docs" {
+		http.Redirect(w, r, "/docs", http.StatusMovedPermanently)
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
