@@ -442,21 +442,36 @@ const swaggerUIHTML = `<!DOCTYPE html>
       // Build spec URL that preserves any external prefix and tolerates /docs or /docs/
       var p = window.location.pathname;
       var specPath;
+      
+      // Compute the base path by removing '/docs' or '/docs/' from the end
+      var basePath = '';
       if (p.endsWith('/docs/')) {
-        specPath = p.slice(0, -6) + 'openapi.yaml'; // remove 'docs/' then add openapi.yaml
+        basePath = p.slice(0, -6); // remove '/docs/'
       } else if (p.endsWith('/docs')) {
-        specPath = p.slice(0, -5) + '/openapi.yaml'; // remove 'docs' then add /openapi.yaml
+        basePath = p.slice(0, -5); // remove '/docs'
       } else {
-        // Fallback: same directory
-        var base = p.replace(/[^\/]*$/, '');
-        if (!base.endsWith('/')) base += '/';
-        specPath = base + 'openapi.yaml';
+        // Fallback: use current directory
+        basePath = p.replace(/[^\/]*$/, '');
       }
+      
+      // Ensure basePath doesn't end with / unless it's the root
+      if (basePath !== '/' && basePath.endsWith('/')) {
+        basePath = basePath.slice(0, -1);
+      }
+      
+      // Construct the full spec path
+      specPath = basePath + '/openapi.yaml';
+      
+      console.log('Loading OpenAPI spec from:', specPath);
+      
       window.ui = SwaggerUIBundle({
         url: specPath,
         dom_id: '#swagger-ui',
         presets: [SwaggerUIBundle.presets.apis],
-        layout: 'BaseLayout'
+        layout: 'BaseLayout',
+        onComplete: function() {
+          console.log('Swagger UI loaded successfully');
+        }
       });
     })();
   </script>
